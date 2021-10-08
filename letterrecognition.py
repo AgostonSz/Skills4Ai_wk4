@@ -7,13 +7,15 @@ from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 dataset = Letters()
 x=[]
 y=[]
-for i in dataset.images:
+for i in dataset.images[:3]:
     x.append(i)
     y.append(i.target)
+    #x.append(darken(i))
+    #y.append(i.target)
     for b in blur(i):
-        pass
         x.append(b)
         y.append(i.target)
+
 
 
 X_train = np.asarray(x)
@@ -21,6 +23,7 @@ X_test = np.asarray(x)
 Y_train = np.squeeze(y)
 Y_test = np.squeeze(y)
 
+map = 0 #0:Agoston, 1:Xiaoyang, 2:Liu
 
 def init(x,y):
     layer = np.random.uniform(-1. ,1., size=(x,y)) / np.sqrt(x*y)
@@ -65,7 +68,7 @@ def plot9(images):
     for i, img in enumerate(images):
         res = sigmoid(img.reshape(-1, 5 * 5).dot(NN1))
         ax1[i % 3][int(np.floor(i/3))].axis('off')
-        ax1[i % 3][int(np.floor(i/3))].set_title(str(letter(np.argmax(res))) + ': conf ' + str(round(np.max(softmax(res.reshape(3,-1))),2)))
+        ax1[i % 3][int(np.floor(i/3))].set_title(str(letter(np.argmax(res), map)) + ': conf ' + str(round(np.max(softmax(res.reshape(3,-1))),2)))
         ax1[i % 3][int(np.floor(i/3))].imshow(img, cmap='gray')
     plt.show()
 
@@ -74,6 +77,7 @@ epochs = 10000
 lr = 0.001
 batch = 9
 losses, accuracies, val_accuracies = [], [], []
+
 
 for i in range(epochs):
     sample = np.random.randint(0, X_train.shape[0], size=batch)
@@ -99,9 +103,17 @@ for i in range(epochs):
 
 plot9(x)
 
-predictions = np.asarray([letter(np.argmax(sigmoid(img.reshape(-1, 5 * 5).dot(NN1)))) for img in dataset.images])
-labels = np.asarray([letter(img.target) for img in dataset.images])
+predictions = []
+labels = []
+for img, label in zip(x, y):
+    predictions.append(np.argmax(sigmoid(img.reshape(-1, 5 * 5).dot(NN1))))
+    labels.append(label)
+
+labels = [letter(label, map) for label in labels]
+predictions = [letter(pred, map) for pred in predictions]
+
 
 fig = ConfusionMatrixDisplay.from_predictions(labels, predictions)
 fig.ax_.set_title('Confusion Matrix')
 fig.plot()
+print(1)
